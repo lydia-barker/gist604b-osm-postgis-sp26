@@ -1,47 +1,41 @@
--- Query 3: Restaurants Near Streets
--- Purpose: Identify streets with the highest number of nearby restaurants
+-- Query 3: Bicycle Parking Proximity to Key Destinations
+-- Purpose: Measure spatial accessibility by analyzing proximity between bicycle parking and key destinations such as hospitals, schools, and parks
 
 -- Requirements:
--- - Use roads for street features
--- - Use pois for point features
--- - Filter POIs where fclass = 'restaurant'
--- - Use ST_DWithin to find restaurants within 0.25 miles (402 meters) of streets
--- - Use a CTE to isolate restaurant locations
--- - Count the number of UNIQUE restaurants near each street (avoid double counting)
--- - Exclude streets with no name (optional but recommended)
--- - Filter to include only streets with more than 10 nearby restaurants
--- - Group by street name ONLY (aggregate geometries using ST_Union)
--- - Order results by restaurant count (highest first)
--- - Include geom column for spatial visualization in GeoPandas
+-- - Use pois for bicycle parking, hospitals, and schools
+-- - Use landuse_a (or natural_a) for parks
+-- - Filter using fclass values:
+--   - 'bicycle_parking'
+--   - 'hospital'
+--   - 'school'
+--   - 'park' (or equivalent landuse classification)
+-- - Use ST_DWithin to calculate proximity (e.g., 500–1000 meter buffer)
+-- - Aggregate counts of nearby destinations per bicycle parking feature
 
 -- Expected Output:
--- - street_name
--- - nearby_restaurant_count
--- - geom
-
-WITH restaurants AS (
-    SELECT
-        geom
-    FROM
-        pois
-    WHERE
-        fclass = 'restaurant'
-)
+-- - bike_parking_id
+-- - hospitals_within_buffer
+-- - schools_within_buffer
+-- - parks_within_buffer
 
 SELECT
-    rds.name AS street_name,
-    COUNT(DISTINCT r.geom) AS nearby_restaurant_count,
-    ST_Union(rds.geom) AS geom
-FROM
-    roads AS rds
-JOIN
-    restaurants AS r ON ST_DWithin(r.geom::geography, rds.geom::geography, 402)
-WHERE
-    rds.name IS NOT NULL
-    AND rds.fclass = 'cycleway'
-GROUP BY
-    rds.name
-HAVING
-    COUNT(DISTINCT r.geom) > 10
-ORDER BY
-    nearby_restaurant_count DESC;
+  b.id AS bike_parking_id,
+  COUNT(DISTINCT h.id) AS hospitals_within_1000m,
+  COUNT(DISTINCT s.id) AS schools_within_1000m,
+  COUNT(DISTINCT p.id) AS parks_within_1000m
+FROM pois b
+
+LEFT JOIN pois h
+  ON h.fclass = 'hospital'
+  AND ST_DWithin(b.geom, h.geom, 1000)
+
+LEFT JOIN pois s
+  ON s.fclass = 'school'
+  AND ST_DWithin(b.geom, s.geom, 1000)
+
+LEFT JOIN landuse_a p
+  ON p.fclass = 'park'
+  AND ST_DWithin(b.geom, p.geom, 1000)
+
+WHERE b.fclass = 'bicycle_parking'
+GROUP BY b.id;

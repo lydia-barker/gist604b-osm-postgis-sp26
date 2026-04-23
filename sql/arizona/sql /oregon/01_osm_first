@@ -1,18 +1,17 @@
--- Query 1: Restaurant Locations
--- Purpose: Extract restaurant locations for spatial distribution analysis
+-- Query 1: Bicycle Parking Locations
+-- Purpose: Extract bicycle parking locations for spatial distribution analysis and to establish the base dataset for all subsequent spatial operations
 
 -- Requirements:
 -- - Use pois for point features
--- - Filter POIs where fclass = 'restaurant'
+-- - Filter POIs where fclass = 'bicycle_parking'
 -- - Return raw point geometries
--- - (Optional) Clip to a specific region if needed
+-- - No spatial joins or aggregations in this step
 
 -- Expected Output:
 -- - geom
 
-SELECT
-    geom
-FROM
+SELECT *
+FROM 
     pois
-WHERE
-    fclass = 'restaurant';
+WHERE 
+    fclass = 'bicycle_parking';

@@ -1,33 +1,24 @@
--- Query 2: Park Area by County
--- Purpose: Calculate the total area of parks in each county
+-- Query 2: Bicycle Parking by Administrative Unit
+-- Purpose: Summarize bicycle parking distribution across administrative areas to evaluate spatial equity and regional accessibility
 
 -- Requirements:
--- - Use adminareas_a for counties (fclass = 'admin_level6')
--- - Use landuse_a for parks (fclass = 'park')
--- - Use ST_Intersects to join parks to counties
--- - Use ST_Intersection to clip park geometries to county boundaries
--- - Use ST_Area(geom::geography) for accurate measurements on WGS84
--- - Convert square meters to square kilometers (divide by 1,000,000)
--- - Group results by county name
--- - Include geom column for spatial visualization
+-- - Use pois for bicycle parking points
+-- - Use adminareas_a for administrative boundary polygons
+-- - Perform spatial join using ST_Within (or equivalent)
+-- - Filter POIs where fclass = 'bicycle_parking'
+-- - Group results by administrative unit name or identifier
+-- - Aggregate using COUNT of bicycle parking features
 
 -- Expected Output:
--- - county_name
--- - park_area_sq_km
--- - geom
+-- - admin_unit name/ID
+-- - bicycle_parking_count
 
 SELECT
-    aa.name AS county_name,
-    SUM(ST_Area(ST_Intersection(l.geom, aa.geom)::geography)) / 1000000 AS park_area_sq_km,
-    aa.geom
-FROM
-    adminareas_a AS aa
-JOIN
-    landuse_a AS l ON ST_Intersects(aa.geom, l.geom)
-WHERE
-    aa.fclass = 'admin_level6'
-    AND l.fclass = 'park'
-GROUP BY
-    aa.name, aa.geom
-ORDER BY
-    park_area_sq_km DESC;
+  a.name AS admin_unit,
+  COUNT(p.id) AS bike_parking_count
+FROM pois p
+JOIN adminareas_a a
+  ON ST_Within(p.geom, a.geom)
+WHERE p.fclass = 'bicycle_parking'
+GROUP BY a.name
+ORDER BY bike_parking_count DESC;
