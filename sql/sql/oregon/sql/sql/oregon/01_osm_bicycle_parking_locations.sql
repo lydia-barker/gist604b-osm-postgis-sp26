@@ -10,7 +10,8 @@
 -- Expected Output:
 -- - geom
 
-SELECT *
+SELECT 
+    geom
 FROM 
     pois
 WHERE 
