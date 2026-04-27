@@ -59,7 +59,7 @@ def setup_osm_postgis(
         ... )
     """
 
-    # Step 1: Setup data directory
+   # Step 1: Setup data directory
     if data_dir is None:
         data_dir = Path(f"../data/{db_name}")
     else:
