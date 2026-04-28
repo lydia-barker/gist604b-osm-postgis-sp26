@@ -13,6 +13,10 @@
 SELECT 
     geom
 FROM 
-    pois
+    gis_osm_pois_free_1
 WHERE 
     fclass = 'bicycle_parking';
+
+    SELECT tablename
+FROM pg_tables
+WHERE schemaname = 'public';
